@@ -25,11 +25,19 @@ typedef struct {
     Mutex mutexes[NUM_RESOURCES];
 } ResourceManager;
 
-// Function declarations
+// Initialize resource manager
 void init_resource_manager(ResourceManager* manager);
+
+// Semaphore wait: returns true if acquired, false if blocked
 bool sem_wait(ResourceManager* manager, ResourceType resource, PCB* pcb);
-bool sem_signal(ResourceManager* manager, ResourceType resource, PCB* pcb);
+
+// Semaphore signal: returns the unblocked PCB (if any), or NULL if none
+PCB* sem_signal(ResourceManager* manager, ResourceType resource, PCB* pcb);
+
+// Print current resource status
 void print_resource_status(const ResourceManager* manager);
+
+// Get human-readable resource name
 const char* get_resource_name(ResourceType resource);
 
-#endif // MUTEX_H 
+#endif // MUTEX_H

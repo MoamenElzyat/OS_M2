@@ -8,12 +8,12 @@
 #define MAX_QUEUES 5
 #define MAX_PROCESSES 100
 
-// Queue structure
+// ProcessQueue structure ✅ (تعريف واحد فقط)
 typedef struct {
     PCB** processes;
     int size;
     int capacity;
-} Queue;
+} ProcessQueue;
 
 // Scheduling algorithms
 typedef enum {
@@ -22,29 +22,15 @@ typedef enum {
     MLFQ            // Multilevel Feedback Queue
 } SchedulingAlgorithm;
 
-// Global variables
-extern int next_pid;
-extern int current_time;
-extern SchedulingAlgorithm scheduling_algorithm;
-extern Queue ready_queue;
-extern Queue ready_queues[MAX_QUEUES];
-
-// Queue structure for each priority level
-typedef struct {
-    PCB** processes;
-    int size;
-    int capacity;
-} ProcessQueue;
-
-// Scheduler structure
+// Scheduler structure ✅
 typedef struct {
     SchedulingAlgorithm algorithm;
-    int quantum;                // For RR and MLFQ
+    int quantum;                   // For RR and MLFQ
     ProcessQueue ready_queues[4];  // For MLFQ (4 priority levels)
     ProcessQueue blocked_queue;
     PCB* running_process;
     int clock_cycle;
-    int next_pid;              // Next available PID
+    int next_pid;                  // Next available PID
 } Scheduler;
 
 // Function declarations
@@ -62,4 +48,4 @@ void update_queues();
 void promote_process(PCB* pcb);
 void demote_process(PCB* pcb);
 
-#endif // SCHEDULER_H 
+#endif // SCHEDULER_H

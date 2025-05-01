@@ -17,10 +17,20 @@ typedef enum {
     INSTR_UNKNOWN
 } InstructionType;
 
-// Function declarations
+// Parse instruction
 InstructionType parse_instruction(const char* instruction);
-bool execute_instruction(PCB* pcb, Memory* memory, ResourceManager* resources);
+
+// Execute instruction (GUI-aware: wraps core logic)
+// ✅ New: returns PCB* (unblocked process if any), success via pointer
+PCB* execute_instruction(PCB* pcb, Memory* memory, ResourceManager* resources, bool* success);
+
+// Execute core logic
+PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resources, bool* success);
+
+// Load program from file
 bool load_program(PCB* pcb, const char* filename);
+
+// Debug print of instruction
 void print_instruction(const char* instruction);
 
-#endif // INTERPRETER_H 
+#endif  // INTERPRETER_H

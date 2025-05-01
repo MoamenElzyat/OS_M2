@@ -1,0 +1,11 @@
+semWait userOutput
+print Hello
+semSignal userOutput
+assign x 5
+assign y 10
+semWait userOutput
+printFromTo x y
+semSignal userOutput
+semWait file
+writeFile test_output.txt Done
+semSignal file
