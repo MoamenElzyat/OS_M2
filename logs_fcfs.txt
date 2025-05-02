@@ -1,0 +1,96 @@
+📥 [Program 1] Loaded instruction: [semWait userInput]
+📥 [Program 1] Loaded instruction: [assign a input]
+📥 [Program 1] Loaded instruction: [assign b input]
+📥 [Program 1] Loaded instruction: [semSignal userInput]
+📥 [Program 1] Loaded instruction: [semWait userOutput]
+📥 [Program 1] Loaded instruction: [printFromTo a b]
+📥 [Program 1] Loaded instruction: [semSignal userOutput]
+📥 [Program 2] Loaded instruction: [semWait userInput]
+📥 [Program 2] Loaded instruction: [assign a input]
+📥 [Program 2] Loaded instruction: [assign b input]
+📥 [Program 2] Loaded instruction: [semSignal userInput]
+📥 [Program 2] Loaded instruction: [semWait file]
+📥 [Program 2] Loaded instruction: [writeFile a b]
+📥 [Program 2] Loaded instruction: [semSignal file]
+📥 [Program 3] Loaded instruction: [semWait userInput]
+📥 [Program 3] Loaded instruction: [assign a input]
+📥 [Program 3] Loaded instruction: [semSignal userInput]
+📥 [Program 3] Loaded instruction: [semWait file]
+📥 [Program 3] Loaded instruction: [assign b readFile a]
+📥 [Program 3] Loaded instruction: [semSignal file]
+📥 [Program 3] Loaded instruction: [semWait userOutput]
+📥 [Program 3] Loaded instruction: [print b]
+📥 [Program 3] Loaded instruction: [semSignal userOutput]
+
+🚀 Starting manual execution with algorithm: FCFS
+
+▶️ Running process PID: 1
+🔢 [INPUT Program 1]: Enter START number for [a]: 🔢 [INPUT Program 1]: Enter END number for [b]: 🔢 Range [1 to 5]: 1 2 3 4 5 
+✅ Process PID 1 finished.
+▶️ Running process PID: 2
+📝 [INPUT Program 2]: Enter FILENAME to write to: 🔧 [INPUT Program 2]: Enter DATA to write: 📝 WROTE to [output1.txt]: hello fcfs
+✅ Process PID 2 finished.
+▶️ Running process PID: 3
+📝 [INPUT Program 3]: Enter FILENAME to read from: 🖨️ Printing: hello fcfs
+✅ Process PID 3 finished.
+
+✅ All processes completed.
+
+=== EXECUTION LOG ===
+
+=== EVENT MESSAGES ===
+➡️ [Program 1 | PID 1] Executing: semWait userInput
+[PID 1] Requests resource [User Input]
+[PID 1] Acquired [User Input]
+➡️ [Program 1 | PID 1] Executing: assign a input
+✅ Assigned [a] = [1]
+➡️ [Program 1 | PID 1] Executing: assign b input
+✅ Assigned [b] = [5]
+➡️ [Program 1 | PID 1] Executing: semSignal userInput
+[PID 1] RELEASED [User Input] (no waiting)
+➡️ [Program 1 | PID 1] Executing: semWait userOutput
+[PID 1] Requests resource [User Output]
+[PID 1] Acquired [User Output]
+➡️ [Program 1 | PID 1] Executing: printFromTo a b
+🔢 [PID 1] printFromTo from 1 to 5:
+➡️ [Program 1 | PID 1] Executing: semSignal userOutput
+[PID 1] RELEASED [User Output] (no waiting)
+➡️ [Program 2 | PID 2] Executing: semWait userInput
+[PID 2] Requests resource [User Input]
+[PID 2] Acquired [User Input]
+➡️ [Program 2 | PID 2] Executing: assign a input
+✅ Assigned [a] = [output1.txt]
+➡️ [Program 2 | PID 2] Executing: assign b input
+✅ Assigned [b] = [hello fcfs]
+➡️ [Program 2 | PID 2] Executing: semSignal userInput
+[PID 2] RELEASED [User Input] (no waiting)
+➡️ [Program 2 | PID 2] Executing: semWait file
+[PID 2] Requests resource [File]
+[PID 2] Acquired [File]
+➡️ [Program 2 | PID 2] Executing: writeFile a b
+📝 [PID 2] WROTE to [output1.txt]: hello fcfs
+➡️ [Program 2 | PID 2] Executing: semSignal file
+[PID 2] RELEASED [File] (no waiting)
+➡️ [Program 3 | PID 3] Executing: semWait userInput
+[PID 3] Requests resource [User Input]
+[PID 3] Acquired [User Input]
+➡️ [Program 3 | PID 3] Executing: assign a input
+✅ Assigned [a] = [output1.txt]
+➡️ [Program 3 | PID 3] Executing: semSignal userInput
+[PID 3] RELEASED [User Input] (no waiting)
+➡️ [Program 3 | PID 3] Executing: semWait file
+[PID 3] Requests resource [File]
+[PID 3] Acquired [File]
+➡️ [Program 3 | PID 3] Executing: assign b readFile a
+📖 READ [output1.txt] into [b]: hello fcfs
+➡️ [Program 3 | PID 3] Executing: semSignal file
+[PID 3] RELEASED [File] (no waiting)
+➡️ [Program 3 | PID 3] Executing: semWait userOutput
+[PID 3] Requests resource [User Output]
+[PID 3] Acquired [User Output]
+➡️ [Program 3 | PID 3] Executing: print b
+🖨️ Printing: hello fcfs
+➡️ [Program 3 | PID 3] Executing: semSignal userOutput
+[PID 3] RELEASED [User Output] (no waiting)
+
+📁 Logs saved to logs.txt ✅

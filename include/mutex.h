@@ -2,8 +2,8 @@
 #define MUTEX_H
 
 #include "pcb.h"
+#include "logger.h"  // ✅ مهم عشان Logger يكون معروف
 
-// Resource types
 typedef enum {
     RESOURCE_USER_INPUT,
     RESOURCE_USER_OUTPUT,
@@ -11,33 +11,21 @@ typedef enum {
     NUM_RESOURCES
 } ResourceType;
 
-// Mutex structure
 typedef struct {
-    bool locked;
+    int locked;
     int owner_pid;
-    PCB** waiting_queue;
     int queue_size;
     int queue_capacity;
+    PCB** waiting_queue;
 } Mutex;
 
-// Resource manager structure
 typedef struct {
     Mutex mutexes[NUM_RESOURCES];
 } ResourceManager;
 
-// Initialize resource manager
 void init_resource_manager(ResourceManager* manager);
-
-// Semaphore wait: returns true if acquired, false if blocked
-bool sem_wait(ResourceManager* manager, ResourceType resource, PCB* pcb);
-
-// Semaphore signal: returns the unblocked PCB (if any), or NULL if none
-PCB* sem_signal(ResourceManager* manager, ResourceType resource, PCB* pcb);
-
-// Print current resource status
-void print_resource_status(const ResourceManager* manager);
-
-// Get human-readable resource name
+bool sem_wait(ResourceManager* manager, ResourceType resource, PCB* pcb, Logger* logger);
+PCB* sem_signal(ResourceManager* manager, ResourceType resource, PCB* pcb, Logger* logger);
 const char* get_resource_name(ResourceType resource);
 
 #endif // MUTEX_H

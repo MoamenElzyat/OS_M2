@@ -40,7 +40,6 @@ void init_scheduler(Scheduler* scheduler, SchedulingAlgorithm algorithm, int qua
     scheduler->clock_cycle = 0;
     scheduler->next_pid = 1;
 
-    // Initialize queues
     for (int i = 0; i < 4; i++) {
         init_process_queue(&scheduler->ready_queues[i]);
     }
@@ -74,6 +73,8 @@ PCB* schedule_next_process(Scheduler* scheduler) {
             if (scheduler->ready_queues[0].size > 0) {
                 next_process = remove_from_queue(&scheduler->ready_queues[0], 0);
                 next_process->quantum_remaining = scheduler->quantum;
+                printf("\U0001F300 [Round Robin] Scheduled PID %d with quantum %d\n",
+                       next_process->pid, next_process->quantum_remaining);
             }
             break;
         case MLFQ:
@@ -100,6 +101,11 @@ void update_scheduler(Scheduler* scheduler) {
     if (scheduler->running_process) {
         if (scheduler->algorithm != FCFS) {
             scheduler->running_process->quantum_remaining--;
+            if (scheduler->algorithm == RR) {
+                printf("\U0001F501 [Round Robin] PID %d quantum left: %d\n",
+                       scheduler->running_process->pid,
+                       scheduler->running_process->quantum_remaining);
+            }
             if (scheduler->running_process->quantum_remaining <= 0) {
                 set_pcb_state(scheduler->running_process, READY);
                 if (scheduler->algorithm == MLFQ) {
@@ -119,7 +125,6 @@ void update_scheduler(Scheduler* scheduler) {
     }
 }
 
-// Debugging status printer
 void print_scheduler_status(const Scheduler* scheduler) {
     if (!scheduler) return;
 
@@ -130,15 +135,15 @@ void print_scheduler_status(const Scheduler* scheduler) {
            scheduler->algorithm == RR ? "Round Robin" : "MLFQ");
 
     if (scheduler->running_process) {
-        printf("🟢 Running Process: PID %d | Priority: %d | PC: %d\n",
+        printf("\U0001F7E2 Running Process: PID %d | Priority: %d | PC: %d\n",
                scheduler->running_process->pid,
                scheduler->running_process->priority,
                scheduler->running_process->program_counter);
     } else {
-        printf("🟠 No process is currently running.\n");
+        printf("\U0001F7E0 No process is currently running.\n");
     }
 
-    printf("\n🔎 Ready Queues:\n");
+    printf("\n\U0001F50E Ready Queues:\n");
     for (int i = 0; i < 4; i++) {
         printf("  Priority %d (%d processes): ", i + 1, scheduler->ready_queues[i].size);
         for (int j = 0; j < scheduler->ready_queues[i].size; j++) {
@@ -148,7 +153,7 @@ void print_scheduler_status(const Scheduler* scheduler) {
         printf("\n");
     }
 
-    printf("\n🔒 Blocked Queue (%d processes): ", scheduler->blocked_queue.size);
+    printf("\n\U0001F512 Blocked Queue (%d processes): ", scheduler->blocked_queue.size);
     for (int j = 0; j < scheduler->blocked_queue.size; j++) {
         PCB* p = scheduler->blocked_queue.processes[j];
         printf("[PID %d] ", p->pid);
@@ -156,7 +161,6 @@ void print_scheduler_status(const Scheduler* scheduler) {
     printf("\n========================================================\n\n");
 }
 
-// Destroy scheduler
 void destroy_scheduler(Scheduler* scheduler) {
     if (!scheduler) return;
     for (int i = 0; i < 4; i++) {

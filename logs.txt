@@ -1,0 +1,13 @@
+
+=== EXECUTION LOG ===
+
+=== EVENT MESSAGES ===
+➡️ [Program 1 | PID 1] Executing: semWait userInput
+[PID 1] Requests resource [User Input]
+[PID 1] Acquired [User Input]
+➡️ [Program 2 | PID 2] Executing: semWait userInput
+[PID 2] Requests resource [User Input]
+[PID 2] BLOCKED on [User Input] (queue size: 1)
+➡️ [Program 3 | PID 3] Executing: semWait userInput
+[PID 3] Requests resource [User Input]
+[PID 3] BLOCKED on [User Input] (queue size: 2)

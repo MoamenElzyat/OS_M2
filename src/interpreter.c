@@ -20,15 +20,6 @@ InstructionType parse_instruction(const char* instruction) {
     return INSTR_UNKNOWN;
 }
 
-bool pcb_has_instruction(PCB* pcb, const char* keyword) {
-    for (int i = 0; i < pcb->instruction_count; i++) {
-        if (strncmp(pcb->instructions[i], keyword, strlen(keyword)) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
 ResourceType parse_resource(const char* token) {
     if (strcmp(token, "userInput") == 0) return RESOURCE_USER_INPUT;
     if (strcmp(token, "userOutput") == 0) return RESOURCE_USER_OUTPUT;
@@ -36,7 +27,32 @@ ResourceType parse_resource(const char* token) {
     return NUM_RESOURCES;
 }
 
-PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resources, bool* success) {
+void print_input_prompt(int pid, const char* var_name) {
+    if (pid == 1) {
+        if (strcmp(var_name, "a") == 0)
+            printf("🔢 [INPUT Program 1]: Enter START number for [%s]: ", var_name);
+        else if (strcmp(var_name, "b") == 0)
+            printf("🔢 [INPUT Program 1]: Enter END number for [%s]: ", var_name);
+        else
+            printf("🔢 [INPUT Program 1]: Enter VALUE for [%s]: ", var_name);
+    } else if (pid == 2) {
+        if (strcmp(var_name, "a") == 0)
+            printf("📝 [INPUT Program 2]: Enter FILENAME to write to: ");
+        else if (strcmp(var_name, "b") == 0)
+            printf("🔧 [INPUT Program 2]: Enter DATA to write: ");
+        else
+            printf("🔧 [INPUT Program 2]: Enter VALUE for [%s]: ", var_name);
+    } else if (pid == 3) {
+        if (strcmp(var_name, "a") == 0)
+            printf("📝 [INPUT Program 3]: Enter FILENAME to read from: ");
+        else
+            printf("🔧 [INPUT Program 3]: Enter VALUE for [%s]: ", var_name);
+    } else {
+        printf("🔧 [INPUT]: Enter VALUE for [%s]: ", var_name);
+    }
+}
+
+PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resources, Logger* logger, bool* success) {
     if (!pcb || !memory || !resources) {
         if (success) *success = false;
         return NULL;
@@ -47,7 +63,11 @@ PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resourc
     }
 
     const char* instruction = pcb->instructions[pcb->program_counter];
-    printf("➡️ [Program %d | PID %d] Executing: %s\n", pcb->pid, pcb->pid, instruction);
+    char log_msg[256];
+    snprintf(log_msg, sizeof(log_msg),
+             "➡️ [Program %d | PID %d] Executing: %s",
+             pcb->pid, pcb->pid, instruction);
+    log_event(logger, log_msg);
 
     char* tokens[4] = {NULL, NULL, NULL, NULL};
     char* instruction_copy = strdup(instruction);
@@ -61,7 +81,6 @@ PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resourc
 
     InstructionType type = parse_instruction(tokens[0]);
     *success = true;
-
     PCB* unblocked = NULL;
 
     switch (type) {
@@ -70,6 +89,8 @@ PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resourc
                 *success = false;
             } else {
                 const char* val = get_pcb_variable(pcb, tokens[1]);
+                snprintf(log_msg, sizeof(log_msg), "🖨️ Printing: %s", val ? val : tokens[1]);
+                log_event(logger, log_msg);
                 printf("🖨️ Printing: %s\n", val ? val : tokens[1]);
             }
             break;
@@ -78,38 +99,14 @@ PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resourc
             if (token_count < 3) {
                 *success = false;
             } else if (strcmp(tokens[2], "input") == 0) {
-                // ✅ تحديد الرسائل حسب البرنامج
-                if (pcb->pid == 1) {
-                    if (strcmp(tokens[1], "a") == 0) {
-                        printf("🔢 [INPUT Program 1]: Enter START number for [%s]: ", tokens[1]);
-                    } else if (strcmp(tokens[1], "b") == 0) {
-                        printf("🔢 [INPUT Program 1]: Enter END number for [%s]: ", tokens[1]);
-                    } else {
-                        printf("🔢 [INPUT Program 1]: Enter VALUE for [%s]: ", tokens[1]);
-                    }
-                } else if (pcb->pid == 2) {
-                    if (strcmp(tokens[1], "a") == 0) {
-                        printf("📝 [INPUT Program 2]: Enter the FILENAME to write to: ");
-                    } else if (strcmp(tokens[1], "b") == 0) {
-                        printf("🔧 [INPUT Program 2]: Enter the DATA to write inside the file: ");
-                    } else {
-                        printf("🔧 [INPUT Program 2]: Enter VALUE for [%s]: ", tokens[1]);
-                    }
-                } else if (pcb->pid == 3) {
-                    if (strcmp(tokens[1], "a") == 0) {
-                        printf("📝 [INPUT Program 3]: Enter the FILENAME to read from: ");
-                    } else {
-                        printf("🔧 [INPUT Program 3]: Enter VALUE for [%s]: ", tokens[1]);
-                    }
-                } else {
-                    printf("🔧 [INPUT]: Enter VALUE for [%s]: ", tokens[1]);
-                }
-
+                print_input_prompt(pcb->pid, tokens[1]);
                 char input_val[256];
                 if (fgets(input_val, sizeof(input_val), stdin)) {
                     input_val[strcspn(input_val, "\n")] = 0;
                     update_pcb_variable(pcb, tokens[1], input_val);
-                    printf("✅ Assigned [%s] = [%s]\n", tokens[1], input_val);
+                    snprintf(log_msg, sizeof(log_msg),
+                             "✅ Assigned [%s] = [%s]", tokens[1], input_val);
+                    log_event(logger, log_msg);
                 }
             } else if (strcmp(tokens[2], "readFile") == 0 && token_count == 4) {
                 const char* filename = get_pcb_variable(pcb, tokens[3]);
@@ -120,19 +117,46 @@ PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resourc
                         if (fgets(content, sizeof(content), file)) {
                             content[strcspn(content, "\n")] = 0;
                             update_pcb_variable(pcb, tokens[1], content);
-                            printf("📖 READ [%s] into [%s]: [%s]\n", filename, tokens[1], content);
+                            snprintf(log_msg, sizeof(log_msg),
+                                     "📖 READ [%s] into [%s]: %s", filename, tokens[1], content);
+                            log_event(logger, log_msg);
                         } else {
-                            printf("⚠️ File [%s] is empty or failed to read.\n", filename);
+                            snprintf(log_msg, sizeof(log_msg),
+                                     "⚠️ File [%s] is empty or unreadable.", filename);
+                            log_event(logger, log_msg);
                         }
                         fclose(file);
                     } else {
-                        printf("❌ Cannot open file: %s\n", filename);
+                        snprintf(log_msg, sizeof(log_msg),
+                                 "❌ Cannot open file: %s", filename);
+                        log_event(logger, log_msg);
                     }
                 }
             } else {
                 const char* val = get_pcb_variable(pcb, tokens[2]);
                 update_pcb_variable(pcb, tokens[1], val ? val : tokens[2]);
-                printf("✅ Assigned [%s] = [%s]\n", tokens[1], val ? val : tokens[2]);
+                snprintf(log_msg, sizeof(log_msg),
+                         "✅ Assigned [%s] = [%s]", tokens[1], val ? val : tokens[2]);
+                log_event(logger, log_msg);
+            }
+            break;
+
+        case INSTR_PRINT_FROM_TO:
+            if (token_count < 3) {
+                *success = false;
+            } else {
+                const char* val1 = get_pcb_variable(pcb, tokens[1]);
+                const char* val2 = get_pcb_variable(pcb, tokens[2]);
+                int start = atoi(val1 ? val1 : tokens[1]);
+                int end = atoi(val2 ? val2 : tokens[2]);
+                snprintf(log_msg, sizeof(log_msg),
+                         "🔢 [PID %d] printFromTo from %d to %d:", pcb->pid, start, end);
+                log_event(logger, log_msg);
+                printf("🔢 Range [%d to %d]: ", start, end);
+                for (int i = start; i <= end; i++) {
+                    printf("%d ", i);
+                }
+                printf("\n");
             }
             break;
 
@@ -148,24 +172,15 @@ PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resourc
                 if (file) {
                     fprintf(file, "%s\n", data);
                     fclose(file);
-                    printf("📝 WROTE to [%s]: [%s]\n", filename, data);
+                    snprintf(log_msg, sizeof(log_msg),
+                             "📝 [PID %d] WROTE to [%s]: %s", pcb->pid, filename, data);
+                    log_event(logger, log_msg);
+                    printf("📝 WROTE to [%s]: %s\n", filename, data);
                 } else {
-                    printf("❌ Failed to write to [%s]\n", filename);
+                    snprintf(log_msg, sizeof(log_msg),
+                             "❌ Failed to write to [%s]", filename);
+                    log_event(logger, log_msg);
                 }
-            }
-            break;
-
-        case INSTR_PRINT_FROM_TO:
-            if (token_count < 3) {
-                *success = false;
-            } else {
-                const char* val1 = get_pcb_variable(pcb, tokens[1]);
-                const char* val2 = get_pcb_variable(pcb, tokens[2]);
-                int start = atoi(val1 ? val1 : tokens[1]);
-                int end = atoi(val2 ? val2 : tokens[2]);
-                printf("🔢 Range [%d to %d]: ", start, end);
-                for (int i = start; i <= end; i++) printf("%d ", i);
-                printf("\n");
             }
             break;
 
@@ -177,31 +192,27 @@ PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resourc
             }
             ResourceType res = parse_resource(tokens[1]);
             if (res == NUM_RESOURCES) {
-                printf("❓ Unknown resource: %s\n", tokens[1]);
+                snprintf(log_msg, sizeof(log_msg), "❓ Unknown resource: %s", tokens[1]);
+                log_event(logger, log_msg);
                 *success = false;
                 break;
             }
             if (type == INSTR_SEM_WAIT) {
-                bool ok = sem_wait(resources, res, pcb);
+                bool ok = sem_wait(resources, res, pcb, logger);
                 if (!ok) {
-                    printf("🔒 [PID %d] BLOCKED on [%s]\n", pcb->pid, tokens[1]);
                     *success = false;
                     free(instruction_copy);
                     return NULL;
                 }
-                printf("🔓 [PID %d] ACQUIRED [%s]\n", pcb->pid, tokens[1]);
             } else {
-                unblocked = sem_signal(resources, res, pcb);
-                printf("🔓 [PID %d] RELEASED [%s]\n", pcb->pid, tokens[1]);
-                if (unblocked) {
-                    printf("🚀 [PID %d] UNBLOCKED and ready.\n", unblocked->pid);
-                }
+                unblocked = sem_signal(resources, res, pcb, logger);
             }
             break;
         }
 
         default:
-            printf("⚠️ Unknown instruction: %s\n", tokens[0]);
+            snprintf(log_msg, sizeof(log_msg), "⚠️ Unknown instruction: %s", tokens[0]);
+            log_event(logger, log_msg);
             *success = false;
             break;
     }
@@ -211,17 +222,19 @@ PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resourc
     return unblocked;
 }
 
-PCB* execute_instruction(PCB* pcb, Memory* memory, ResourceManager* resources, bool* success) {
+PCB* execute_instruction(PCB* pcb, Memory* memory, ResourceManager* resources, Logger* logger, bool* success) {
 #ifdef USE_GUI
-    // GUI integration hook if needed
 #endif
-    return execute_instruction_core(pcb, memory, resources, success);
+    return execute_instruction_core(pcb, memory, resources, logger, success);
 }
 
 bool load_program(PCB* pcb, const char* filename) {
     if (!pcb || !filename) return false;
     FILE* file = fopen(filename, "r");
-    if (!file) return false;
+    if (!file) {
+        printf("❌ Failed to open program file: %s\n", filename);
+        return false;
+    }
     char line[256];
     while (fgets(line, sizeof(line), file)) {
         line[strcspn(line, "\n")] = 0;
@@ -231,9 +244,4 @@ bool load_program(PCB* pcb, const char* filename) {
     }
     fclose(file);
     return true;
-}
-
-void print_instruction(const char* instruction) {
-    if (!instruction) return;
-    printf("➡️ Executing: %s\n", instruction);
 }

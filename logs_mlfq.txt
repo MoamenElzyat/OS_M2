@@ -1,0 +1,46 @@
+📥 [Program 1] Loaded instruction: [semWait userInput]
+📥 [Program 1] Loaded instruction: [assign a input]
+📥 [Program 1] Loaded instruction: [assign b input]
+📥 [Program 1] Loaded instruction: [semSignal userInput]
+📥 [Program 1] Loaded instruction: [semWait userOutput]
+📥 [Program 1] Loaded instruction: [printFromTo a b]
+📥 [Program 1] Loaded instruction: [semSignal userOutput]
+📥 [Program 2] Loaded instruction: [semWait userInput]
+📥 [Program 2] Loaded instruction: [assign a input]
+📥 [Program 2] Loaded instruction: [assign b input]
+📥 [Program 2] Loaded instruction: [semSignal userInput]
+📥 [Program 2] Loaded instruction: [semWait file]
+📥 [Program 2] Loaded instruction: [writeFile a b]
+📥 [Program 2] Loaded instruction: [semSignal file]
+📥 [Program 3] Loaded instruction: [semWait userInput]
+📥 [Program 3] Loaded instruction: [assign a input]
+📥 [Program 3] Loaded instruction: [semSignal userInput]
+📥 [Program 3] Loaded instruction: [semWait file]
+📥 [Program 3] Loaded instruction: [assign b readFile a]
+📥 [Program 3] Loaded instruction: [semSignal file]
+📥 [Program 3] Loaded instruction: [semWait userOutput]
+📥 [Program 3] Loaded instruction: [print b]
+📥 [Program 3] Loaded instruction: [semSignal userOutput]
+
+🚀 Starting manual execution with algorithm: MLFQ
+
+▶️ Running process PID: 1
+▶️ Running process PID: 2
+▶️ Running process PID: 3
+
+✅ All processes completed.
+
+=== EXECUTION LOG ===
+
+=== EVENT MESSAGES ===
+➡️ [Program 1 | PID 1] Executing: semWait userInput
+[PID 1] Requests resource [User Input]
+[PID 1] Acquired [User Input]
+➡️ [Program 2 | PID 2] Executing: semWait userInput
+[PID 2] Requests resource [User Input]
+[PID 2] BLOCKED on [User Input] (queue size: 1)
+➡️ [Program 3 | PID 3] Executing: semWait userInput
+[PID 3] Requests resource [User Input]
+[PID 3] BLOCKED on [User Input] (queue size: 2)
+
+📁 Logs saved to logs.txt ✅

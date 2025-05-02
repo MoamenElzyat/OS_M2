@@ -4,8 +4,8 @@
 #include "pcb.h"
 #include "memory.h"
 #include "mutex.h"
+#include "logger.h"
 
-// Instruction types
 typedef enum {
     INSTR_PRINT,
     INSTR_ASSIGN,
@@ -17,20 +17,12 @@ typedef enum {
     INSTR_UNKNOWN
 } InstructionType;
 
-// Parse instruction
 InstructionType parse_instruction(const char* instruction);
 
-// Execute instruction (GUI-aware: wraps core logic)
-// ✅ New: returns PCB* (unblocked process if any), success via pointer
-PCB* execute_instruction(PCB* pcb, Memory* memory, ResourceManager* resources, bool* success);
+PCB* execute_instruction(PCB* pcb, Memory* memory, ResourceManager* resources, Logger* logger, bool* success);
 
-// Execute core logic
-PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resources, bool* success);
+PCB* execute_instruction_core(PCB* pcb, Memory* memory, ResourceManager* resources, Logger* logger, bool* success);
 
-// Load program from file
 bool load_program(PCB* pcb, const char* filename);
 
-// Debug print of instruction
-void print_instruction(const char* instruction);
-
-#endif  // INTERPRETER_H
+#endif
